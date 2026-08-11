@@ -1,0 +1,1 @@
+{"traffic":50,"error_total":20,"error_rate_pct":40.0,"latency_p50":151.0,"latency_p95":2651.0,"latency_p99":2651.0,"avg_cost_usd":0.0039,"total_cost_usd":0.1554,"tokens_in_total":1320,"tokens_out_total":10096,"error_breakdown":{"RuntimeError":10,"HTTP_500":10},"quality_avg":0.88}
