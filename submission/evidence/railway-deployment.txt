@@ -28,3 +28,12 @@ Dashboard smoke test:
   correlation_id: req-dashboard01
   latency_ms: 620
   /api/data: traffic=1, p95=620ms, cost=$0.001377, tokens=34/85, quality=0.8
+
+Jaeger Railway service smoke test (2026-08-11):
+  Service: all-in-one (jaegertracing/all-in-one:1.57)
+  Private OTLP endpoint: http://all-in-one.railway.internal:4318/v1/traces
+  Public UI: https://jaeger-production-1aa4.up.railway.app
+  UI health: HTTP 200
+  Generated trace ID: 7bcd38389fabbbc86dab56b1418e350d
+  Service observed: day13-observability-lab
+  Span count: 4

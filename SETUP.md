@@ -55,7 +55,7 @@ OTEL_EXPORTER_OTLP_ENDPOINT=
 
 ### 3.1 Jaeger local qua OTLP
 
-Cháº¡y Jaeger all-in-one Ä‘á»ƒ xem waterfall OTEL:
+Chạy Jaeger all-in-one để xem waterfall OTEL:
 
 ```bash
 docker compose -f docker-compose.jaeger.yml up -d
@@ -147,9 +147,17 @@ railway up --project <project-id> --environment production
 ```
 
 Khai báo `LANGFUSE_*`, `OTEL_*`, `APP_*` và `LOG_*` trong Railway Variables;
-không commit `.env` hoặc `RAILWAY_TOKEN`. Trên Railway không dùng OTLP
-`localhost`; chọn endpoint collector công khai, hoặc đặt
-`OTEL_TRACES_EXPORTER=none`/`console` nếu chỉ xem Langfuse.
+không commit `.env` hoặc `RAILWAY_TOKEN`. Khi Jaeger là một service cùng
+project/environment, dùng private network, không dùng `localhost`:
+
+```dotenv
+OTEL_TRACES_EXPORTER=otlp
+OTEL_EXPORTER_OTLP_ENDPOINT=http://all-in-one.railway.internal:4318/v1/traces
+```
+
+Jaeger UI hiện tại: `https://jaeger-production-1aa4.up.railway.app`.
+URL này công khai trace metadata nên chỉ dùng cho demo/lab; không phù hợp để
+lưu dữ liệu production nhạy cảm.
 
 Sau khi deploy, cùng một domain Railway cung cấp các điểm truy cập sau:
 

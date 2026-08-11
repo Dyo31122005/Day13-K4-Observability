@@ -11,7 +11,7 @@ sau khi merge đầy đủ phần A (Trà), B (Tuấn Anh) và C (Mai Anh) vào 
 | `langfuse-traces-list.json` | 12 trace thật trên Langfuse (project `My Project`, host `jp.cloud.langfuse.com`) kèm correlation_id, prompt metadata và link từng trace. |
 | `pii-redaction-sample.jsonl` | 3 dòng log gốc có email/phone/credit card test đã redact thành `[REDACTED_*]`. |
 | `prompt-versioning.json` | Prompt `day13-chat` v1 (`baseline`+`production`)/v2 (`candidate`) tạo qua Langfuse SDK, 4 trace xác nhận: baseline→v1, candidate→v2, chuyển `production`→v2, rollback `production`→v1. |
-| `railway-deployment.txt` | Railway deployment SUCCESS, public health smoke test và correlation ID smoke test. |
+| `railway-deployment.txt` | Railway deployment SUCCESS, public health/dashboard smoke test, và Jaeger cloud smoke trace (4 spans). |
 | `challenge-rag_slow-2026-08-11.txt` | Challenge chính thức, metric latency và correlation IDs sau khi điều tra `rag_slow`. |
 | `jaeger-otel-smoke.txt` | OTLP smoke trace trên Jaeger với `http.request`, Langfuse bridge, `rag.retrieve` và `llm.generate`. |
 | `metrics-baseline.json` / `dashboard-baseline.html` | `/metrics` + dashboard HTML khi hệ thống bình thường (20 request, error 0%, P95 151ms, quality 0.88) |
