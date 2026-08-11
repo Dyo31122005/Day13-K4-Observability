@@ -271,6 +271,63 @@
         "url": "{{baseUrl}}/incidents/rag_slow/disable",
         "description": "Restore normal demo state after request 08."
       }
+    },
+    {
+      "name": "10 - Enable tool_fail incident (trace an error)",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": "{{baseUrl}}/incidents/tool_fail/enable",
+        "description": "Enable the controlled Vector store timeout. Run request 12 immediately after the error demo to restore normal state."
+      }
+    },
+    {
+      "name": "11 - Create traced HTTP 500 error",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "X-Correlation-ID",
+            "value": "demo-tool-fail-{{$timestamp}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"user_id\": \"{{demoUserId}}\",\n  \"session_id\": \"{{demoSessionId}}\",\n  \"feature\": \"qa\",\n  \"message\": \"Run the controlled tool failure demo.\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": "{{baseUrl}}/chat",
+        "description": "Expected HTTP 500 with detail RuntimeError. Jaeger shows error.type=RuntimeError and an exception event on http.request and rag.retrieve; Dashboard and Railway logs show request_failed with the same correlation ID."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Controlled tool failure returns HTTP 500', () => pm.response.to.have.status(500));",
+              "pm.collectionVariables.set('lastCorrelationId', pm.response.json().detail ? pm.request.headers.get('X-Correlation-ID') : '');"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "12 - Disable tool_fail incident (always run)",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": "{{baseUrl}}/incidents/tool_fail/disable",
+        "description": "Restore normal state after the error trace demo."
+      }
     }
   ]
 }

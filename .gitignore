@@ -7,3 +7,4 @@ data/audit.jsonl
 .env
 .pytest_cache/
 .antigravity/
+.claude/

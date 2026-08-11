@@ -19,7 +19,7 @@
 
 ## 2. Kết quả kỹ thuật
 
-- Điểm `validate_logs.py`: 100/100 (log cục bộ hiện tại: 21 record, 10 correlation ID duy nhất, 0 PII leak — xem `submission/evidence/validate-logs-final.txt`). Log smoke test challenge/Railway của Mạnh cũng không phát hiện PII (`submission/evidence/README.md`).
+- Điểm `validate_logs.py`: 100/100 (log cục bộ hiện tại: 41 record, 20 correlation ID duy nhất, 0 PII leak — xem `submission/evidence/validate-logs-final.txt`, làm mới bằng `python scripts/load_test.py` sau khi dọn log tích lũy trong ngày). Log smoke test challenge/Railway của Mạnh cũng không phát hiện PII (`submission/evidence/README.md`).
 - Tổng số traces: **12 trace thật** trên Langfuse tính đến thời điểm merge (project `My Project`, id `cmso0kyzy000jad0i5gnv9daa`, host `https://jp.cloud.langfuse.com`) — gồm 10 trace từ load test của D (`submission/evidence/langfuse-traces-list.json`) + smoke test Railway/Jaeger của Mạnh (trace `3344b7c5d4949b04627fcffdcb5e82f9`, `35b57e8388ace0ac45ca899751cfa8ec`).
 - Số PII leak còn lại: 0 trong mọi evidence (baseline, 3 alert, challenge, Railway smoke) — scrubber áp dụng đệ quy cho payload/list.
 - Link/đường dẫn dashboard: `scripts/dashboard.py --port 8001` (local, đọc `data/logs.jsonl` theo contract `config/dashboard.yaml`) hoặc `scripts/dashboard.html` (bản export tĩnh của Mạnh). Evidence: `submission/evidence/dashboard-*.html`.
@@ -28,7 +28,8 @@
 
 - Evidence correlation ID: đối chiếu trực tiếp được giữa 3 lớp — log JSON, Langfuse trace và OTEL/Jaeger span đều dùng chung một correlation ID. Ví dụ `correlation_id=req-6f78fc62` xuất hiện cả trong `data/logs.jsonl` (`request_received` → `response_sent`) lẫn metadata trace Langfuse `a5210fa25704aa293b0a3352c48e7015` (`submission/evidence/langfuse-traces-list.json`); phía challenge chính thức xem thêm `submission/evidence/challenge-rag_slow-2026-08-11.txt` và `railway-deployment.txt`.
 - Evidence PII redaction: `submission/evidence/pii-redaction-sample.jsonl` (email/phone/credit card test → `[REDACTED_*]`) và `submission/evidence/log-alert*-correlation.jsonl`.
-- Evidence trace waterfall: `submission/evidence/jaeger-otel-smoke.txt` — trace `35b57e8388ace0ac45ca899751cfa8ec` với span `http.request` → `rag.retrieve` → `llm.generate`, bridge sang Langfuse. Bản Railway đã xác minh thêm trace `7bcd38389fabbbc86dab56b1418e350d` gồm 4 spans tại `https://jaeger-production-1aa4.up.railway.app`. Chưa có screenshot Langfuse UI (không có công cụ chụp màn hình trong phiên làm việc); link để tự mở và chụp: `https://jp.cloud.langfuse.com/project/cmso0kyzy000jad0i5gnv9daa/traces/a5210fa25704aa293b0a3352c48e7015`.
+- Evidence trace waterfall: `submission/evidence/jaeger-otel-smoke.txt` — trace `35b57e8388ace0ac45ca899751cfa8ec` với span `http.request` → `rag.retrieve` → `llm.generate`, bridge sang Langfuse. Bản Railway đã xác minh thêm trace `7bcd38389fabbbc86dab56b1418e350d` gồm 4 spans tại `https://jaeger-production-1aa4.up.railway.app`. Screenshot Langfuse UI thật cho trace `a5210fa25704aa293b0a3352c48e7015`: `submission/evidence/langfuse-trace.png`.
+- Evidence lỗi có trace: bật `tool_fail` một request rồi tắt lại — HTTP 500, trace `2162c3727446f94638dee47762cfe430` với span lỗi `rag.retrieve` và `http.request` (`error.type=RuntimeError`, span status ERROR, không lộ message gốc); span ERROR status được set bằng `otel.record_safe_exception` (`app/otel.py`, test `tests/test_otel.py::test_record_safe_exception_marks_span_as_error_without_message`). Chi tiết: `submission/evidence/railway-deployment.txt`.
 - Giải thích một span đáng chú ý: span `rag.retrieve` (Jaeger/OTEL) mang `incident.rag_slow=true` và `rag.document_count`, thời gian tăng rõ khi bật incident — không ghi raw message/PII. Ở lớp Langfuse, generation span của trace `a5210fa25704aa293b0a3352c48e7015` có metadata `prompt_source=local-fallback`, `prompt_fetch_error=LangfuseFallback` (xem mục 4) — cho thấy app rơi vào nhánh fail-safe khi prompt managed không tồn tại, đúng thiết kế trong `app/prompt_management.py`.
 
 ## 4. Prompt versioning
@@ -46,7 +47,7 @@
 ## 5. Dashboard, SLO và alerts
 
 - Kết quả `validate_dashboard.py`: `HỢP LỆ: 6/6 panel có trong dashboard contract.` (xem `submission/evidence/dashboard-validator.txt`).
-- Evidence dashboard: `scripts/dashboard.py` (Mai Anh) render trực tiếp từ `data/logs.jsonl` theo `config/dashboard.yaml`. Ảnh/HTML baseline và 3 lần bật incident practice lưu tại `submission/evidence/dashboard-baseline.html`, `dashboard-alert1-rag_slow.html`, `dashboard-alert2-tool_fail.html`, `dashboard-alert3-cost_spike.html` (chi tiết xem `submission/evidence/README.md`).
+- Evidence dashboard: `scripts/dashboard.py` (Mai Anh) render trực tiếp từ `data/logs.jsonl` theo `config/dashboard.yaml`. Ảnh/HTML baseline và 3 lần bật incident practice lưu tại `submission/evidence/dashboard-baseline.html`, `dashboard-alert1-rag_slow.html`, `dashboard-alert2-tool_fail.html`, `dashboard-alert3-cost_spike.html`, cùng ảnh chụp dashboard runtime thật `submission/evidence/dashboard-baseline.png` và `submission/evidence/dashboard-rag-slow.png` (chi tiết xem `submission/evidence/README.md`).
 - SLO đã chọn và lý do (`config/slo.yaml`, khớp threshold trong `config/dashboard.yaml`):
   - Latency P95 ≤ 3000ms — baseline đo được ~150ms; incident `rag_slow` đẩy P95 lên ~2651ms (~17.6x) nhưng vẫn dưới ngưỡng, chừa biên an toàn có chủ đích trước khi vi phạm SLO.
   - Error rate ≤ 2% — baseline 0%; incident `tool_fail` đẩy lên 50%, vượt xa ngưỡng, chứng minh SLO đủ nhạy để bắt lỗi downstream dependency.

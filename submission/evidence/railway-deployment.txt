@@ -37,3 +37,10 @@ Jaeger Railway service smoke test (2026-08-11):
   Generated trace ID: 7bcd38389fabbbc86dab56b1418e350d
   Service observed: day13-observability-lab
   Span count: 4
+
+Controlled error trace smoke test (2026-08-11):
+  Incident: tool_fail (enabled for one request, then disabled)
+  HTTP response: 500
+  Trace ID: 2162c3727446f94638dee47762cfe430
+  Error spans: rag.retrieve, http.request
+  Error attribute: error.type=RuntimeError

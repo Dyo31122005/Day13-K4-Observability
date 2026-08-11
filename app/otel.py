@@ -5,6 +5,7 @@ from typing import Any
 
 try:
     from opentelemetry import trace
+    from opentelemetry.trace import Status, StatusCode
     from opentelemetry.sdk.resources import Resource
     from opentelemetry.sdk.trace import TracerProvider
     from opentelemetry.sdk.trace.export import ConsoleSpanExporter, SimpleSpanProcessor
@@ -12,6 +13,8 @@ try:
     OTEL_AVAILABLE = True
 except ImportError:  # pragma: no cover - exercised when optional OTEL packages are absent
     trace = None  # type: ignore[assignment]
+    Status = None  # type: ignore[assignment,misc]
+    StatusCode = None  # type: ignore[assignment,misc]
     Resource = None  # type: ignore[assignment,misc]
     TracerProvider = None  # type: ignore[assignment,misc]
     ConsoleSpanExporter = None  # type: ignore[assignment,misc]
@@ -32,6 +35,9 @@ class _NoopSpan:
         return False
 
     def set_attribute(self, key: str, value: Any) -> None:
+        return None
+
+    def set_status(self, status: Any) -> None:
         return None
 
     def record_exception(self, exception: BaseException, attributes: dict[str, Any] | None = None) -> None:
@@ -118,6 +124,8 @@ def current_trace_metadata() -> dict[str, str]:
 def record_safe_exception(span: Any, exception: BaseException) -> None:
     """Record only the exception type so exception messages cannot leak PII."""
 
+    if OTEL_AVAILABLE:
+        span.set_status(Status(StatusCode.ERROR, type(exception).__name__))
     span.add_event(
         "exception",
         attributes={"exception.type": type(exception).__name__},
