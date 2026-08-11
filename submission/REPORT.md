@@ -2,9 +2,9 @@
 
 ## 1. Thông tin nhóm
 
-- Tên nhóm:
-- Repository URL:
-- Commit SHA cuối:
+- Tên nhóm: MatMangRoiHUHU
+- Repository URL: https://github.com/Dyo31122005/Day13-K4-Observability
+- Commit SHA cuối: `8c7d6929f4b396d3a1eca9f98b4b4fc78a17b7fe` (tính đến trước khi Mạnh chạy CP3 — cập nhật lại SHA này sau khi CP3 merge xong)
 - Thành viên và vai trò:
   - Hà Anh Tuấn — Thành viên A: API & Middleware; Correlation ID, exception handler và request context.
   - Nguyễn Hương Trà — Thành viên B: Security Engineer; PII scrubbing, regex patterns và kiểm chứng log.
@@ -12,27 +12,37 @@
   - Nguyễn Minh Đạt — Thành viên D: SRE & Alerts Engineer; SLO, alert rules và alert runbook.
   - Nguyễn Hùng Mạnh — Thành viên E: QA & Chief Investigator; OTEL instrumentation, liên kết OTEL–Langfuse, load test, challenge và tổng hợp báo cáo.
 
+  > **Lưu ý đối soát A/B:** thứ tự A=Tuấn Anh / B=Trà ở trên khớp với tác giả Git
+  > thật của các commit liên quan (`9f36aaa` "role_A_5_nguoi" — sửa correlation
+  > ID/middleware — tác giả account `tuanha122004`; `028f349` — mở rộng PII
+  > regex — tác giả account `teahtn72`), nhưng **ngược** với mô tả vai trò D
+  > từng nhận trực tiếp lúc đầu buổi ("Role A là Trà, Role B là Anh Tuấn"). Cả
+  > nhóm nên đối chiếu lại trước khi nộp để mục 7 khớp rubric B2 ("khai báo
+  > khớp với Git").
+
 ## 2. Kết quả kỹ thuật
 
-- Điểm `validate_logs.py`: `100/100` ở bộ evidence sau merge (xem `submission/evidence/README.md`); log smoke test mới không phát hiện PII.
-- Tổng số traces: challenge + load test tạo tối thiểu 15 request traces; smoke test Railway đã xác nhận trace Langfuse production `3344b7c5d4949b04627fcffdcb5e82f9`.
-- Số PII leak còn lại: `0` trong các evidence alert/challenge; scrubber áp dụng đệ quy cho payload/list.
-- Link/đường dẫn dashboard: `scripts/dashboard.py`, contract `config/dashboard.yaml`, evidence `submission/evidence/dashboard-*.html`.
+- Điểm `validate_logs.py`: 100/100 (log cục bộ hiện tại: 21 record, 10 correlation ID duy nhất, 0 PII leak — xem `submission/evidence/validate-logs-final.txt`). Log smoke test challenge/Railway của Mạnh cũng không phát hiện PII (`submission/evidence/README.md`).
+- Tổng số traces: **12 trace thật** trên Langfuse tính đến thời điểm merge (project `My Project`, id `cmso0kyzy000jad0i5gnv9daa`, host `https://jp.cloud.langfuse.com`) — gồm 10 trace từ load test của D (`submission/evidence/langfuse-traces-list.json`) + smoke test Railway/Jaeger của Mạnh (trace `3344b7c5d4949b04627fcffdcb5e82f9`, `35b57e8388ace0ac45ca899751cfa8ec`).
+- Số PII leak còn lại: 0 trong mọi evidence (baseline, 3 alert, challenge, Railway smoke) — scrubber áp dụng đệ quy cho payload/list.
+- Link/đường dẫn dashboard: `scripts/dashboard.py --port 8001` (local, đọc `data/logs.jsonl` theo contract `config/dashboard.yaml`) hoặc `scripts/dashboard.html` (bản export tĩnh của Mạnh). Evidence: `submission/evidence/dashboard-*.html`.
 
 ## 3. Logging và tracing
 
-- Evidence correlation ID: `submission/evidence/challenge-rag_slow-2026-08-11.txt` và `railway-deployment.txt`.
-- Evidence PII redaction: `submission/evidence/log-alert*-correlation.jsonl`; các email/điện thoại/thẻ được thay bằng `[REDACTED_*]`.
-- Evidence trace waterfall: `submission/evidence/jaeger-otel-smoke.txt` ghi trace `35b57e8388ace0ac45ca899751cfa8ec` với `http.request`, Langfuse bridge, `rag.retrieve`, `llm.generate`.
-- Giải thích một span đáng chú ý: `rag.retrieve` mang `incident.rag_slow=true`, `rag.document_count` và thời gian tăng rõ trong challenge; không ghi raw message/PII.
+- Evidence correlation ID: đối chiếu trực tiếp được giữa 3 lớp — log JSON, Langfuse trace và OTEL/Jaeger span đều dùng chung một correlation ID. Ví dụ `correlation_id=req-6f78fc62` xuất hiện cả trong `data/logs.jsonl` (`request_received` → `response_sent`) lẫn metadata trace Langfuse `a5210fa25704aa293b0a3352c48e7015` (`submission/evidence/langfuse-traces-list.json`); phía challenge chính thức xem thêm `submission/evidence/challenge-rag_slow-2026-08-11.txt` và `railway-deployment.txt`.
+- Evidence PII redaction: `submission/evidence/pii-redaction-sample.jsonl` (email/phone/credit card test → `[REDACTED_*]`) và `submission/evidence/log-alert*-correlation.jsonl`.
+- Evidence trace waterfall: `submission/evidence/jaeger-otel-smoke.txt` — trace `35b57e8388ace0ac45ca899751cfa8ec` với span `http.request` → `rag.retrieve` → `llm.generate`, bridge sang Langfuse. Chưa có screenshot Langfuse UI (không có công cụ chụp màn hình trong phiên làm việc); link để tự mở và chụp: `https://jp.cloud.langfuse.com/project/cmso0kyzy000jad0i5gnv9daa/traces/a5210fa25704aa293b0a3352c48e7015`.
+- Giải thích một span đáng chú ý: span `rag.retrieve` (Jaeger/OTEL) mang `incident.rag_slow=true` và `rag.document_count`, thời gian tăng rõ khi bật incident — không ghi raw message/PII. Ở lớp Langfuse, generation span của trace `a5210fa25704aa293b0a3352c48e7015` có metadata `prompt_source=local-fallback`, `prompt_fetch_error=LangfuseFallback` (xem mục 4) — cho thấy app rơi vào nhánh fail-safe khi prompt managed không tồn tại, đúng thiết kế trong `app/prompt_management.py`.
 
 ## 4. Prompt versioning
 
-- Prompt name: `day13-chat` (cấu hình qua `LANGFUSE_PROMPT_NAME`).
-- Version/label baseline: `production`; trace production đã được ghi thành công trên Langfuse.
-- Version/label candidate: chưa tạo trong repo; cần thao tác trên project Langfuse chung.
-- Trace ID của mỗi version: trace smoke test label `production` là `3344b7c5d4949b04627fcffdcb5e82f9`; candidate cần tạo thêm trên Langfuse.
-- Bằng chứng đổi label hoặc rollback: bổ sung sau khi tạo v1/v2 trên Langfuse; app đã sẵn metadata `prompt_name`, `prompt_label`, `prompt_version`.
+**Chưa hoàn thành.** Kiểm tra trực tiếp bằng API Langfuse ngay trước khi merge báo cáo này (`client.get_prompt("day13-chat", label="production")`) trả về `404 LangfuseNotFoundError: Prompt not found` — kể cả trace `3344b7c5d4949b04627fcffdcb5e82f9` mà một phiên bản báo cáo trước đó trích làm bằng chứng "label production đã ghi thành công" thực ra vẫn mang metadata `prompt_source=local-fallback`. Nghĩa là: Langfuse đã kết nối được (`auth_check() == True` sau khi sửa `LANGFUSE_HOST` trong `.env` từ `https://cloud.langfuse.com` sang đúng vùng `https://jp.cloud.langfuse.com`), nhưng **chưa ai tạo prompt `day13-chat` trên project**. Cần một thành viên làm theo [docs/PROMPT_VERSIONING.md](../docs/PROMPT_VERSIONING.md): tạo version 1 (label `baseline`+`production`), version 2 (label `candidate`), chạy lại `load_test.py` với từng `LANGFUSE_PROMPT_LABEL`, rồi điền các trường dưới đây bằng trace ID thật (không dùng lại trace `local-fallback` làm bằng chứng).
+
+- Prompt name: `day13-chat` (đã cấu hình qua `LANGFUSE_PROMPT_NAME`, nhưng chưa tồn tại trên Langfuse).
+- Version/label baseline:
+- Version/label candidate:
+- Trace ID của mỗi version:
+- Bằng chứng đổi label hoặc rollback:
 
 ## 5. Dashboard, SLO và alerts
 

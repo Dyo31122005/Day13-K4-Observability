@@ -1,0 +1,157 @@
+{
+  "project_id": "cmso0kyzy000jad0i5gnv9daa",
+  "host": "https://jp.cloud.langfuse.com",
+  "trace_count": 10,
+  "traces": [
+    {
+      "trace_id": "a5210fa25704aa293b0a3352c48e7015",
+      "timestamp": "2026-08-11 08:46:52.500000+00:00",
+      "tags": [
+        "claude-sonnet-4-5",
+        "lab",
+        "qa"
+      ],
+      "correlation_id": "req-6f78fc62",
+      "prompt_name": "day13-chat",
+      "prompt_label": "production",
+      "prompt_version": "local-v1",
+      "prompt_source": "local-fallback",
+      "url": "https://jp.cloud.langfuse.com/project/cmso0kyzy000jad0i5gnv9daa/traces/a5210fa25704aa293b0a3352c48e7015"
+    },
+    {
+      "trace_id": "3337039c333e7999868b4303013cfaec",
+      "timestamp": "2026-08-11 08:46:51.925000+00:00",
+      "tags": [
+        "claude-sonnet-4-5",
+        "lab",
+        "qa"
+      ],
+      "correlation_id": "req-a19e2e6f",
+      "prompt_name": "day13-chat",
+      "prompt_label": "production",
+      "prompt_version": "local-v1",
+      "prompt_source": "local-fallback",
+      "url": "https://jp.cloud.langfuse.com/project/cmso0kyzy000jad0i5gnv9daa/traces/3337039c333e7999868b4303013cfaec"
+    },
+    {
+      "trace_id": "a624a8501ca26720c97da5b81610ba24",
+      "timestamp": "2026-08-11 08:46:51.374000+00:00",
+      "tags": [
+        "claude-sonnet-4-5",
+        "lab",
+        "qa"
+      ],
+      "correlation_id": "req-5524c6ed",
+      "prompt_name": "day13-chat",
+      "prompt_label": "production",
+      "prompt_version": "local-v1",
+      "prompt_source": "local-fallback",
+      "url": "https://jp.cloud.langfuse.com/project/cmso0kyzy000jad0i5gnv9daa/traces/a624a8501ca26720c97da5b81610ba24"
+    },
+    {
+      "trace_id": "e74e95e4392945156ab8984a2ab3ba94",
+      "timestamp": "2026-08-11 08:46:50.628000+00:00",
+      "tags": [
+        "claude-sonnet-4-5",
+        "lab",
+        "qa"
+      ],
+      "correlation_id": "req-63633ef7",
+      "prompt_name": "day13-chat",
+      "prompt_label": "production",
+      "prompt_version": "local-v1",
+      "prompt_source": "local-fallback",
+      "url": "https://jp.cloud.langfuse.com/project/cmso0kyzy000jad0i5gnv9daa/traces/e74e95e4392945156ab8984a2ab3ba94"
+    },
+    {
+      "trace_id": "c6263e3beb25489c5084d32d5c58ad13",
+      "timestamp": "2026-08-11 08:46:49.880000+00:00",
+      "tags": [
+        "claude-sonnet-4-5",
+        "lab",
+        "summary"
+      ],
+      "correlation_id": "req-f927f94d",
+      "prompt_name": "day13-chat",
+      "prompt_label": "production",
+      "prompt_version": "local-v1",
+      "prompt_source": "local-fallback",
+      "url": "https://jp.cloud.langfuse.com/project/cmso0kyzy000jad0i5gnv9daa/traces/c6263e3beb25489c5084d32d5c58ad13"
+    },
+    {
+      "trace_id": "857c8bbdd1a16469b46b172fa5454bd4",
+      "timestamp": "2026-08-11 08:46:49.315000+00:00",
+      "tags": [
+        "claude-sonnet-4-5",
+        "lab",
+        "qa"
+      ],
+      "correlation_id": "req-88c76f83",
+      "prompt_name": "day13-chat",
+      "prompt_label": "production",
+      "prompt_version": "local-v1",
+      "prompt_source": "local-fallback",
+      "url": "https://jp.cloud.langfuse.com/project/cmso0kyzy000jad0i5gnv9daa/traces/857c8bbdd1a16469b46b172fa5454bd4"
+    },
+    {
+      "trace_id": "c356ceaefd12be8db720dcfd31a3dfb5",
+      "timestamp": "2026-08-11 08:46:48.715000+00:00",
+      "tags": [
+        "claude-sonnet-4-5",
+        "lab",
+        "qa"
+      ],
+      "correlation_id": "req-efaa769c",
+      "prompt_name": "day13-chat",
+      "prompt_label": "production",
+      "prompt_version": "local-v1",
+      "prompt_source": "local-fallback",
+      "url": "https://jp.cloud.langfuse.com/project/cmso0kyzy000jad0i5gnv9daa/traces/c356ceaefd12be8db720dcfd31a3dfb5"
+    },
+    {
+      "trace_id": "cf880d71142712d7ce4f8de7bbd269ec",
+      "timestamp": "2026-08-11 08:46:48.152000+00:00",
+      "tags": [
+        "claude-sonnet-4-5",
+        "lab",
+        "qa"
+      ],
+      "correlation_id": "req-ce532e32",
+      "prompt_name": "day13-chat",
+      "prompt_label": "production",
+      "prompt_version": "local-v1",
+      "prompt_source": "local-fallback",
+      "url": "https://jp.cloud.langfuse.com/project/cmso0kyzy000jad0i5gnv9daa/traces/cf880d71142712d7ce4f8de7bbd269ec"
+    },
+    {
+      "trace_id": "5e9d3a322a9dce7a2cf73033d87143c1",
+      "timestamp": "2026-08-11 08:46:47.607000+00:00",
+      "tags": [
+        "claude-sonnet-4-5",
+        "lab",
+        "qa"
+      ],
+      "correlation_id": "req-6745ba34",
+      "prompt_name": "day13-chat",
+      "prompt_label": "production",
+      "prompt_version": "local-v1",
+      "prompt_source": "local-fallback",
+      "url": "https://jp.cloud.langfuse.com/project/cmso0kyzy000jad0i5gnv9daa/traces/5e9d3a322a9dce7a2cf73033d87143c1"
+    },
+    {
+      "trace_id": "38c9c9f4bb1a297a3c087c9d00f92824",
+      "timestamp": "2026-08-11 08:46:47.005000+00:00",
+      "tags": [
+        "claude-sonnet-4-5",
+        "lab",
+        "summary"
+      ],
+      "correlation_id": "req-bf462d71",
+      "prompt_name": "day13-chat",
+      "prompt_label": "production",
+      "prompt_version": "local-v1",
+      "prompt_source": "local-fallback",
+      "url": "https://jp.cloud.langfuse.com/project/cmso0kyzy000jad0i5gnv9daa/traces/38c9c9f4bb1a297a3c087c9d00f92824"
+    }
+  ]
+}
