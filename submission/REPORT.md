@@ -6,11 +6,11 @@
 - Repository URL: https://github.com/Dyo31122005/Day13-K4-Observability
 - Commit SHA cuối: `3c7e8169865777861b135f4d0e7e13cada080586`
 - Thành viên và vai trò:
-  - Hà Anh Tuấn — Thành viên A: API & Middleware; Correlation ID, exception handler và request context.
-  - Nguyễn Hương Trà — Thành viên B: Security Engineer; PII scrubbing, regex patterns và kiểm chứng log.
-  - Trần Hoàng Mai Anh — Thành viên C: Metrics & Dashboard; error rate và dashboard sáu nhóm chỉ số.
-  - Nguyễn Minh Đạt — Thành viên D: SRE & Alerts Engineer; SLO, alert rules và alert runbook.
-  - Nguyễn Hùng Mạnh — Thành viên E: QA & Chief Investigator; OTEL instrumentation, liên kết OTEL–Langfuse, load test, challenge và tổng hợp báo cáo.
+  - Hà Anh Tuấn - 2A202601582 — Thành viên A: API & Middleware; Correlation ID, exception handler và request context.
+  - Nguyễn Hương Trà - 2A202601416— Thành viên B: Security Engineer; PII scrubbing, regex patterns và kiểm chứng log.
+  - Trần Hoàng Mai Anh - 2A202601324 — Thành viên C: Metrics & Dashboard; error rate và dashboard sáu nhóm chỉ số.
+  - Nguyễn Minh Đạt - 2A202601142 — Thành viên D: SRE & Alerts Engineer; SLO, alert rules và alert runbook.
+  - Nguyễn Hùng Mạnh - 2A202601256 — Thành viên E: QA & Chief Investigator; OTEL instrumentation, liên kết OTEL–Langfuse, load test, challenge và tổng hợp báo cáo.
 
   (Xác nhận A=Tuấn Anh / B=Trà bởi thành viên D ngày 2026-08-11; khớp với tác giả
   Git thật của các commit liên quan: `9f36aaa` "role_A_5_nguoi" — correlation
