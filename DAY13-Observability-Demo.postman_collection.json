@@ -1,0 +1,276 @@
+{
+  "info": {
+    "_postman_id": "5bb71bd4-19e3-4ce4-84b8-cab1df1b0f46",
+    "name": "DAY13 - Observability Demo",
+    "description": "One-click demo requests for Dashboard, OTEL/Jaeger, Langfuse, PII scrubbing, structured logs, and the rag_slow challenge. Import this collection, select it, then click Send on each request.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://llmops-jaeger-production.up.railway.app",
+      "type": "string"
+    },
+    {
+      "key": "jaegerUrl",
+      "value": "https://jaeger-production-1aa4.up.railway.app",
+      "type": "string"
+    },
+    {
+      "key": "demoUserId",
+      "value": "demo-observability-user",
+      "type": "string"
+    },
+    {
+      "key": "demoSessionId",
+      "value": "postman-demo-session",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "01 - System health (OTEL enabled)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/health",
+        "description": "Expect HTTP 200 and `otel_enabled: true`, proving instrumentation is on."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Health is OK', () => pm.response.to.have.status(200));",
+              "pm.test('OTEL is enabled', () => pm.expect(pm.response.json().otel_enabled).to.eql(true));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "02 - Dashboard data (six metric groups)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/data",
+        "description": "JSON backing the dashboard. For the visual page open {{baseUrl}}/dashboard in a browser."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Dashboard data is available', () => pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "03 - OpenTelemetry and Jaeger tracing",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "X-Correlation-ID",
+            "value": "demo-otel-{{$timestamp}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"user_id\": \"{{demoUserId}}\",\n  \"session_id\": \"{{demoSessionId}}\",\n  \"feature\": \"qa\",\n  \"message\": \"Explain the error-rate metric in one short sentence.\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": "{{baseUrl}}/chat",
+        "description": "After Send, open {{jaegerUrl}}, choose service `day13-observability-lab`, and click Find Traces. The newest trace should contain http.request, rag.retrieve, llm.generate, and the Langfuse bridge."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Chat and OTEL trace request succeed', () => pm.response.to.have.status(200));",
+              "const response = pm.response.json();",
+              "pm.collectionVariables.set('lastCorrelationId', response.correlation_id);",
+              "console.log('Correlation ID for Jaeger/Langfuse/log lookup:', response.correlation_id);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "04 - Langfuse LLM observability",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "X-Correlation-ID",
+            "value": "demo-langfuse-{{$timestamp}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"user_id\": \"{{demoUserId}}\",\n  \"session_id\": \"{{demoSessionId}}\",\n  \"feature\": \"summary\",\n  \"message\": \"Summarize why LLM applications need observability.\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": "{{baseUrl}}/chat",
+        "description": "Creates a Langfuse trace with session, feature, prompt metadata, token counts, cost, and quality score."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Langfuse demo request succeeds', () => pm.response.to.have.status(200));",
+              "pm.collectionVariables.set('lastCorrelationId', pm.response.json().correlation_id);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "05 - PII scrubbing (test data only)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "X-Correlation-ID",
+            "value": "demo-pii-{{$timestamp}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"user_id\": \"{{demoUserId}}\",\n  \"session_id\": \"{{demoSessionId}}\",\n  \"feature\": \"qa\",\n  \"message\": \"TEST ONLY: contact demo.user@example.com, phone 0901234567, card 4111 1111 1111 1111. Explain PII scrubbing.\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": "{{baseUrl}}/chat",
+        "description": "Uses fake test PII. The structured log pipeline redacts it before persistence/export; demonstrate the resulting correlation ID in the dashboard/log evidence."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('PII redaction demo request succeeds', () => pm.response.to.have.status(200));",
+              "pm.collectionVariables.set('lastCorrelationId', pm.response.json().correlation_id);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "06 - Structured logging and correlation ID",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "X-Correlation-ID",
+            "value": "demo-structured-log-{{$timestamp}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"user_id\": \"{{demoUserId}}\",\n  \"session_id\": \"{{demoSessionId}}\",\n  \"feature\": \"qa\",\n  \"message\": \"Create one correlated structured log record for the demo.\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": "{{baseUrl}}/chat",
+        "description": "The response correlation_id is retained in Postman collection variable `lastCorrelationId`. Use it to connect this request across logs, Langfuse, and Jaeger."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Structured logging demo request succeeds', () => pm.response.to.have.status(200));",
+              "pm.collectionVariables.set('lastCorrelationId', pm.response.json().correlation_id);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "07 - Enable rag_slow incident",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": "{{baseUrl}}/incidents/rag_slow/enable",
+        "description": "Optional challenge demo: enable the controlled RAG latency incident. Always run request 09 afterwards to restore normal state."
+      }
+    },
+    {
+      "name": "08 - Send request while rag_slow is enabled",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "X-Correlation-ID",
+            "value": "demo-rag-slow-{{$timestamp}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"user_id\": \"{{demoUserId}}\",\n  \"session_id\": \"{{demoSessionId}}\",\n  \"feature\": \"qa\",\n  \"message\": \"Run the controlled rag_slow incident demo.\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": "{{baseUrl}}/chat",
+        "description": "Expect a much larger latency_ms. In Jaeger, rag.retrieve is the slow child span."
+      }
+    },
+    {
+      "name": "09 - Disable rag_slow incident (always run)",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": "{{baseUrl}}/incidents/rag_slow/disable",
+        "description": "Restore normal demo state after request 08."
+      }
+    }
+  ]
+}
