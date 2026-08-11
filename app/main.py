@@ -22,6 +22,58 @@ app.add_middleware(CorrelationIdMiddleware)
 agent = LabAgent()
 
 
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception) -> JSONResponse:
+    error_type = type(exc).__name__
+    record_error(error_type)
+    
+    correlation_id = getattr(request.state, "correlation_id", "UNKNOWN")
+    
+    log.error(
+        "unhandled_error",
+        service="api",
+        error_type=error_type,
+        correlation_id=correlation_id,
+        payload={"detail": str(exc)},
+    )
+    
+    return JSONResponse(
+        status_code=500,
+        content={
+            "detail": "Internal Server Error",
+            "error_type": error_type,
+            "correlation_id": correlation_id
+        }
+    )
+
+
+@app.exception_handler(HTTPException)
+async def http_exception_handler(request: Request, exc: HTTPException) -> JSONResponse:
+    error_type = "HTTPException"
+    if exc.status_code >= 500:
+        record_error(f"HTTP_{exc.status_code}")
+        
+    correlation_id = getattr(request.state, "correlation_id", "UNKNOWN")
+    
+    log.error(
+        "http_error",
+        service="api",
+        status_code=exc.status_code,
+        error_type=error_type,
+        correlation_id=correlation_id,
+        payload={"detail": exc.detail},
+    )
+    
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={
+            "detail": exc.detail,
+            "error_type": error_type,
+            "correlation_id": correlation_id
+        }
+    )
+
+
 @app.on_event("startup")
 async def startup() -> None:
     log.info(
@@ -44,8 +96,13 @@ async def metrics() -> dict:
 
 @app.post("/chat", response_model=ChatResponse)
 async def chat(request: Request, body: ChatRequest) -> ChatResponse:
-    # TODO: Enrich logs with request context (user_id_hash, session_id, feature, model, env)
-    # bind_contextvars(...)
+    bind_contextvars(
+        user_id_hash=hash_user_id(body.user_id),
+        session_id=body.session_id,
+        feature=body.feature,
+        model=agent.model,
+        env=os.getenv("APP_ENV", "dev"),
+    )
     
     log.info(
         "request_received",
