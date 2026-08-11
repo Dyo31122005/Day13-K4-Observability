@@ -4,7 +4,7 @@
 
 - Tên nhóm: MatMangRoiHUHU
 - Repository URL: https://github.com/Dyo31122005/Day13-K4-Observability
-- Commit SHA cuối: `8c7d6929f4b396d3a1eca9f98b4b4fc78a17b7fe` (tính đến trước khi Mạnh chạy CP3 — cập nhật lại SHA này sau khi CP3 merge xong)
+- Commit SHA cuối: `2b8061b6ebfbb169991add7ec773aa2f1e94fea0`
 - Thành viên và vai trò:
   - Hà Anh Tuấn — Thành viên A: API & Middleware; Correlation ID, exception handler và request context.
   - Nguyễn Hương Trà — Thành viên B: Security Engineer; PII scrubbing, regex patterns và kiểm chứng log.
@@ -12,13 +12,10 @@
   - Nguyễn Minh Đạt — Thành viên D: SRE & Alerts Engineer; SLO, alert rules và alert runbook.
   - Nguyễn Hùng Mạnh — Thành viên E: QA & Chief Investigator; OTEL instrumentation, liên kết OTEL–Langfuse, load test, challenge và tổng hợp báo cáo.
 
-  > **Lưu ý đối soát A/B:** thứ tự A=Tuấn Anh / B=Trà ở trên khớp với tác giả Git
-  > thật của các commit liên quan (`9f36aaa` "role_A_5_nguoi" — sửa correlation
-  > ID/middleware — tác giả account `tuanha122004`; `028f349` — mở rộng PII
-  > regex — tác giả account `teahtn72`), nhưng **ngược** với mô tả vai trò D
-  > từng nhận trực tiếp lúc đầu buổi ("Role A là Trà, Role B là Anh Tuấn"). Cả
-  > nhóm nên đối chiếu lại trước khi nộp để mục 7 khớp rubric B2 ("khai báo
-  > khớp với Git").
+  (Xác nhận A=Tuấn Anh / B=Trà bởi thành viên D ngày 2026-08-11; khớp với tác giả
+  Git thật của các commit liên quan: `9f36aaa` "role_A_5_nguoi" — correlation
+  ID/middleware — tác giả account `tuanha122004`; `028f349` — mở rộng PII regex —
+  tác giả account `teahtn72`.)
 
 ## 2. Kết quả kỹ thuật
 
