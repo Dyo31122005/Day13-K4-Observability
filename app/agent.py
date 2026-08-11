@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from . import metrics
 from .mock_llm import FakeLLM
 from .mock_rag import retrieve
+from .otel import current_trace_metadata
 from .pii import hash_user_id, summarize_text
 from .prompt_management import resolve_prompt
 from .tracing import get_langfuse_client, observe, tracing_enabled
@@ -28,7 +29,14 @@ class LabAgent:
         self.llm = FakeLLM(model=model)
 
     @observe(as_type="generation", capture_input=False, capture_output=False)
-    def run(self, user_id: str, feature: str, session_id: str, message: str) -> AgentResult:
+    def run(
+        self,
+        user_id: str,
+        feature: str,
+        session_id: str,
+        message: str,
+        correlation_id: str | None = None,
+    ) -> AgentResult:
         started = time.perf_counter()
         docs = retrieve(message)
         langfuse_client = get_langfuse_client()
@@ -49,6 +57,9 @@ class LabAgent:
         quality_score = self._heuristic_quality(message, response.text, docs)
         latency_ms = int((time.perf_counter() - started) * 1000)
         cost_usd = self._estimate_cost(response.usage.input_tokens, response.usage.output_tokens)
+        otel_metadata = current_trace_metadata()
+        if correlation_id:
+            otel_metadata["correlation_id"] = correlation_id
 
         langfuse_client.update_current_trace(
             user_id=hash_user_id(user_id),
@@ -59,6 +70,7 @@ class LabAgent:
                 "prompt_label": prompt.label,
                 "prompt_version": prompt.version,
                 "prompt_source": prompt.source,
+                **otel_metadata,
             },
         )
         langfuse_client.update_current_generation(
@@ -71,6 +83,7 @@ class LabAgent:
                 "prompt_version": prompt.version,
                 "prompt_source": prompt.source,
                 "prompt_fetch_error": prompt.fetch_error,
+                **otel_metadata,
             },
             usage_details={
                 "prompt_tokens": response.usage.input_tokens,

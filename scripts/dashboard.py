@@ -20,6 +20,7 @@ import yaml
 REPO_ROOT = Path(__file__).resolve().parents[1]
 LOG_PATH = REPO_ROOT / "data" / "logs.jsonl"
 CONFIG_PATH = REPO_ROOT / "config" / "dashboard.yaml"
+HTML_PATH = Path(__file__).resolve().parent / "dashboard.html"
 
 
 def as_number(record: dict, field: str) -> float | None:
@@ -64,16 +65,67 @@ def summarise(records: list[dict], window_minutes: int) -> dict:
         value = as_number(record, "cost_usd")
         if value is not None:
             costs_by_minute[record["_timestamp"].strftime("%H:%M")] += value
+
+    # Build per-minute latency series for charts
+    latency_by_minute: defaultdict[str, list[float]] = defaultdict(list)
+    for record in responses:
+        lat = as_number(record, "latency_ms")
+        if lat is not None:
+            latency_by_minute[record["_timestamp"].strftime("%H:%M")].append(lat)
+
+    latency_series = []
+    for minute in sorted(latency_by_minute.keys()):
+        vals = latency_by_minute[minute]
+        latency_series.append({
+            "minute": minute,
+            "p50": percentile(vals, 50),
+            "p95": percentile(vals, 95),
+            "p99": percentile(vals, 99),
+        })
+
+    # Build per-minute traffic series
+    traffic_by_minute: defaultdict[str, int] = defaultdict(int)
+    for record in received:
+        traffic_by_minute[record["_timestamp"].strftime("%H:%M")] += 1
+
+    traffic_series = []
+    for minute in sorted(traffic_by_minute.keys()):
+        traffic_series.append({"minute": minute, "count": traffic_by_minute[minute]})
+
+    # Recent logs (last 15 entries, newest first)
+    recent_logs = []
+    for record in reversed(scoped[-15:]):
+        entry = {
+            "ts": record.get("ts", ""),
+            "event": record.get("event", ""),
+            "service": record.get("service", ""),
+            "correlation_id": record.get("correlation_id", ""),
+        }
+        lat = as_number(record, "latency_ms")
+        if lat is not None:
+            entry["latency_ms"] = lat
+        recent_logs.append(entry)
+
     return {
         "latest": latest.isoformat() if latest else "No valid log timestamp",
         "records": len(scoped),
         "latency": {"p50": percentile(latencies, 50), "p95": percentile(latencies, 95), "p99": percentile(latencies, 99)},
+        "latency_series": latency_series,
         "traffic": {"count": len(received), "per_minute": len(received) / window_minutes},
+        "traffic_series": traffic_series,
         "errors": {"rate": (len(failed) / len(received) * 100) if received else 0.0, "breakdown": dict(Counter(record.get("error_type") or "unknown" for record in failed))},
         "cost": {"total": sum(costs), "by_minute": dict(sorted(costs_by_minute.items()))},
         "tokens": {"input": tokens_in, "output": tokens_out},
         "quality": mean(qualities) if qualities else 0.0,
+        "recent_logs": recent_logs,
     }
+
+
+def dashboard_summary() -> dict:
+    """Return the current dashboard dataset for the standalone server or FastAPI."""
+
+    dashboard = yaml.safe_load(CONFIG_PATH.read_text(encoding="utf-8"))["dashboard"]
+    return summarise(load_records(LOG_PATH), dashboard["time_range_minutes"])
 
 
 def status(value: float, operator: str, limit: float) -> str:
@@ -112,16 +164,40 @@ def render(summary: dict, dashboard: dict) -> str:
 def make_handler(log_path: Path, config_path: Path):
     class DashboardHandler(BaseHTTPRequestHandler):
         def do_GET(self) -> None:  # noqa: N802
+            if self.path == "/api/data":
+                dashboard = yaml.safe_load(config_path.read_text(encoding="utf-8"))["dashboard"]
+                summary = summarise(load_records(log_path), dashboard["time_range_minutes"])
+                payload = json.dumps(summary, default=str).encode()
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json; charset=utf-8")
+                self.send_header("Content-Length", str(len(payload)))
+                self.send_header("Access-Control-Allow-Origin", "*")
+                self.end_headers()
+                self.wfile.write(payload)
+                return
+
             if self.path not in {"/", "/index.html"}:
+                # Try to serve the HTML file for the new dashboard
                 self.send_error(404)
                 return
-            dashboard = yaml.safe_load(config_path.read_text(encoding="utf-8"))["dashboard"]
-            page = render(summarise(load_records(log_path), dashboard["time_range_minutes"]), dashboard).encode()
-            self.send_response(200)
-            self.send_header("Content-Type", "text/html; charset=utf-8")
-            self.send_header("Content-Length", str(len(page)))
-            self.end_headers()
-            self.wfile.write(page)
+
+            # Serve the premium HTML dashboard
+            if HTML_PATH.exists():
+                page = HTML_PATH.read_bytes()
+                self.send_response(200)
+                self.send_header("Content-Type", "text/html; charset=utf-8")
+                self.send_header("Content-Length", str(len(page)))
+                self.end_headers()
+                self.wfile.write(page)
+            else:
+                # Fallback to inline rendered dashboard
+                dashboard = yaml.safe_load(config_path.read_text(encoding="utf-8"))["dashboard"]
+                page = render(summarise(load_records(log_path), dashboard["time_range_minutes"]), dashboard).encode()
+                self.send_response(200)
+                self.send_header("Content-Type", "text/html; charset=utf-8")
+                self.send_header("Content-Length", str(len(page)))
+                self.end_headers()
+                self.wfile.write(page)
 
         def log_message(self, _: str, *args: object) -> None:
             return

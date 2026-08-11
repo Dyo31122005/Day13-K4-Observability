@@ -1,0 +1,16 @@
+Jaeger backend: http://127.0.0.1:16686 (pre-existing local Jaeger container)
+OTLP endpoint: http://127.0.0.1:4318/v1/traces
+Smoke request correlation_id: req-jaeger01
+OTEL trace ID: 35b57e8388ace0ac45ca899751cfa8ec
+
+Jaeger query `service=day13-observability-lab` returned the same trace with
+these spans:
+  - http.request
+  - run (Langfuse generation bridge)
+  - rag.retrieve
+  - llm.generate
+
+The `http.request` span contains `app.correlation_id=req-jaeger01`; the
+Langfuse bridge metadata contains the same correlation ID and OTEL trace/span
+IDs. RAG/LLM attributes contain incident state, counts and token metadata but
+not raw prompt, email or phone data.

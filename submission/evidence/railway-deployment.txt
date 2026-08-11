@@ -1,0 +1,30 @@
+Railway project: llmops-jaeger
+Project ID: 63e999d9-1468-4db1-955f-3265bc4fb8aa
+Environment: production
+Service: llmops-jaeger
+Deployment ID: b87df5d5-fa7a-4ae0-83a1-b4263e64a464
+Deployment status: SUCCESS
+Public URL: https://llmops-jaeger-production.up.railway.app
+Dashboard URL: https://llmops-jaeger-production.up.railway.app/dashboard
+
+Health smoke test (2026-08-11, after Langfuse Variables were configured):
+HTTP/1.1 200 OK
+{"ok":true,"tracing_enabled":true,"otel_enabled":true,"incidents":{"rag_slow":false,"tool_fail":false,"cost_spike":false}}
+
+Chat smoke test used x-request-id: req-railway1
+Response correlation_id: req-railway1
+
+Langfuse production smoke trace:
+  session_id: langfuse-production-01
+  trace_id: 3344b7c5d4949b04627fcffdcb5e82f9
+  trace_name: http.request
+  latency: 0.644s
+  total_cost: $0.001449
+
+LANGFUSE_PUBLIC_KEY and LANGFUSE_SECRET_KEY were added manually through
+Railway Variables. RAILWAY_TOKEN is never an application variable.
+
+Dashboard smoke test:
+  correlation_id: req-dashboard01
+  latency_ms: 620
+  /api/data: traffic=1, p95=620ms, cost=$0.001377, tokens=34/85, quality=0.8

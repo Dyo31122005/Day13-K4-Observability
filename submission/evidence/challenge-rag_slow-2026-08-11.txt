@@ -1,0 +1,18 @@
+Challenge ID: day13-k4-observability-v1
+Incident: rag_slow
+
+Official challenge run:
+  python scripts/inject_incident.py
+  python scripts/load_test.py --challenge --concurrency 5
+
+Observed successful requests and correlation IDs:
+  req-4ea8f5a2, req-388a7e08, req-f06309e5, req-77c77433, req-84e3f74e
+
+The post-run /metrics snapshot reported traffic=15, error_rate_pct=0.0,
+latency_p50=186ms, latency_p95=2737ms, latency_p99=2737ms. The slow span is
+the RAG retrieval path (incident.rag_slow=true); the request and child span
+are linked to the same correlation ID in application logs/trace metadata.
+
+Mitigation applied: disable the practice incident after collection with
+python scripts/inject_incident.py --disable. Preventive control: alert on
+latency_p95_ms and investigate metrics -> OTEL/Langfuse trace -> JSON log.

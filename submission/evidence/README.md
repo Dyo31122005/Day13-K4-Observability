@@ -7,6 +7,9 @@ sau khi merge đầy đủ phần A (Trà), B (Tuấn Anh) và C (Mai Anh) vào 
 | File | Nội dung |
 |---|---|
 | `dashboard-validator.txt` | Kết quả `validate_dashboard.py` (Mai Anh) |
+| `railway-deployment.txt` | Railway deployment SUCCESS, public health smoke test và correlation ID smoke test. |
+| `challenge-rag_slow-2026-08-11.txt` | Challenge chính thức, metric latency và correlation IDs sau khi điều tra `rag_slow`. |
+| `jaeger-otel-smoke.txt` | OTLP smoke trace trên Jaeger với `http.request`, Langfuse bridge, `rag.retrieve` và `llm.generate`. |
 | `metrics-baseline.json` / `dashboard-baseline.html` | `/metrics` + dashboard HTML khi hệ thống bình thường (20 request, error 0%, P95 151ms, quality 0.88) |
 | `metrics-alert1-rag_slow.json` / `dashboard-alert1-rag_slow.html` / `log-alert1-rag_slow-correlation.jsonl` | Bật `rag_slow`: P95 151ms → 2651ms (~17.6x). Log mẫu theo correlation_id `req-f7a97cae` cho thấy `request_received` → `response_sent` cùng ID. |
 | `metrics-alert2-tool_fail.json` / `dashboard-alert2-tool_fail.html` / `log-alert2-tool_fail-correlation.jsonl` | Bật `tool_fail`: error_rate_pct 0% → 50% (vượt ngưỡng alert `ElevatedErrorRate` > 2%). Log mẫu `req-521e82b8` cho thấy chuỗi `request_received` → `request_failed` (`RuntimeError: Vector store timeout`) → `http_error` (500), cùng một correlation_id xuyên suốt. |
