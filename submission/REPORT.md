@@ -4,7 +4,7 @@
 
 - Tên nhóm: MatMangRoiHUHU
 - Repository URL: https://github.com/Dyo31122005/Day13-K4-Observability
-- Commit SHA cuối: `2b8061b6ebfbb169991add7ec773aa2f1e94fea0`
+- Commit SHA cuối: `3c7e8169865777861b135f4d0e7e13cada080586`
 - Thành viên và vai trò:
   - Hà Anh Tuấn — Thành viên A: API & Middleware; Correlation ID, exception handler và request context.
   - Nguyễn Hương Trà — Thành viên B: Security Engineer; PII scrubbing, regex patterns và kiểm chứng log.
