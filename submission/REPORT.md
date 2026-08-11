@@ -33,13 +33,15 @@
 
 ## 4. Prompt versioning
 
-**Chưa hoàn thành.** Kiểm tra trực tiếp bằng API Langfuse ngay trước khi merge báo cáo này (`client.get_prompt("day13-chat", label="production")`) trả về `404 LangfuseNotFoundError: Prompt not found` — kể cả trace `3344b7c5d4949b04627fcffdcb5e82f9` mà một phiên bản báo cáo trước đó trích làm bằng chứng "label production đã ghi thành công" thực ra vẫn mang metadata `prompt_source=local-fallback`. Nghĩa là: Langfuse đã kết nối được (`auth_check() == True` sau khi sửa `LANGFUSE_HOST` trong `.env` từ `https://cloud.langfuse.com` sang đúng vùng `https://jp.cloud.langfuse.com`), nhưng **chưa ai tạo prompt `day13-chat` trên project**. Cần một thành viên làm theo [docs/PROMPT_VERSIONING.md](../docs/PROMPT_VERSIONING.md): tạo version 1 (label `baseline`+`production`), version 2 (label `candidate`), chạy lại `load_test.py` với từng `LANGFUSE_PROMPT_LABEL`, rồi điền các trường dưới đây bằng trace ID thật (không dùng lại trace `local-fallback` làm bằng chứng).
+**Hoàn thành** — tạo bằng `client.create_prompt(...)` và `client.api.prompt_version.update(...)` (Langfuse Python SDK), toàn bộ 4 bước verify bằng trace thật (`submission/evidence/prompt-versioning.json`), không dùng lại trace `local-fallback` cũ nào làm bằng chứng.
 
-- Prompt name: `day13-chat` (đã cấu hình qua `LANGFUSE_PROMPT_NAME`, nhưng chưa tồn tại trên Langfuse).
-- Version/label baseline:
-- Version/label candidate:
-- Trace ID của mỗi version:
-- Bằng chứng đổi label hoặc rollback:
+- Prompt name: `day13-chat`, type `text`, giữ đúng 3 biến bắt buộc `{{feature}}`, `{{docs}}`, `{{message}}`.
+- Version/label baseline: **v1**, label `baseline` + `production` — nội dung `Feature={{feature}}\nDocs={{docs}}\nQuestion={{message}}`.
+- Version/label candidate: **v2**, label `candidate` — thêm 1 dòng format: `Answer in at most 3 concise sentences.` (chỉ đổi format/độ dài câu trả lời như hướng dẫn, không đổi 3 biến).
+- Trace ID của mỗi version (đều `prompt_source=langfuse`, tức fetch managed prompt thành công, không fallback):
+  - `req-promptv1` (label `baseline`, version 1) → trace `49c8660313542f2db957b9353a2c8203`
+  - `req-promptv2` (label `candidate`, version 2) → trace `73e0b45c9630fc69a9d26decf27c4d3a`
+- Bằng chứng đổi label hoặc rollback: chuyển `production` sang v2 bằng `prompt_version.update(version=2, new_labels=['candidate','production'])` → v1 tự động mất label `production` (Langfuse đảm bảo 1 label = 1 version). Request `req-prodv2` (label `production`) → trace `beb5c47a862ec664a28dc2810663d9b4` xác nhận nhận **version 2**. Sau đó rollback bằng `prompt_version.update(version=1, new_labels=['baseline','production'])`; request `req-rollback01` (label `production`) → trace `f6442b6498fbde9010cebe23127917fd` xác nhận `production` đã **quay lại version 1**. Chi tiết đầy đủ 4 trace + nội dung 2 version: `submission/evidence/prompt-versioning.json`.
 
 ## 5. Dashboard, SLO và alerts
 

@@ -1,0 +1,69 @@
+{
+  "prompt_name": "day13-chat",
+  "versions": [
+    {
+      "version": 1,
+      "labels": [
+        "baseline",
+        "production"
+      ],
+      "prompt": "Feature={{feature}}\nDocs={{docs}}\nQuestion={{message}}",
+      "commit_message": "v1: baseline template, 3 required variables (feature/docs/message)"
+    },
+    {
+      "version": 2,
+      "labels": [
+        "candidate",
+        "latest"
+      ],
+      "prompt": "Feature={{feature}}\nDocs={{docs}}\nQuestion={{message}}\nAnswer in at most 3 concise sentences.",
+      "commit_message": "v2 candidate: constrain answer to 3 concise sentences (format change only, same 3 variables)"
+    }
+  ],
+  "workflow_traces_in_order": [
+    {
+      "step": "req-promptv1",
+      "trace_id": "49c8660313542f2db957b9353a2c8203",
+      "correlation_id": "req-promptv1",
+      "prompt_name": "day13-chat",
+      "prompt_label": "baseline",
+      "prompt_version": 1,
+      "prompt_source": "langfuse",
+      "url": "https://jp.cloud.langfuse.com/project/cmso0kyzy000jad0i5gnv9daa/traces/49c8660313542f2db957b9353a2c8203",
+      "note": "1. Test baseline label -> v1"
+    },
+    {
+      "step": "req-promptv2",
+      "trace_id": "73e0b45c9630fc69a9d26decf27c4d3a",
+      "correlation_id": "req-promptv2",
+      "prompt_name": "day13-chat",
+      "prompt_label": "candidate",
+      "prompt_version": 2,
+      "prompt_source": "langfuse",
+      "url": "https://jp.cloud.langfuse.com/project/cmso0kyzy000jad0i5gnv9daa/traces/73e0b45c9630fc69a9d26decf27c4d3a",
+      "note": "2. Test candidate label -> v2"
+    },
+    {
+      "step": "req-prodv2",
+      "trace_id": "beb5c47a862ec664a28dc2810663d9b4",
+      "correlation_id": "req-prodv2",
+      "prompt_name": "day13-chat",
+      "prompt_label": "production",
+      "prompt_version": 2,
+      "prompt_source": "langfuse",
+      "url": "https://jp.cloud.langfuse.com/project/cmso0kyzy000jad0i5gnv9daa/traces/beb5c47a862ec664a28dc2810663d9b4",
+      "note": "3. Moved production label to v2, tested production -> now v2"
+    },
+    {
+      "step": "req-rollback01",
+      "trace_id": "f6442b6498fbde9010cebe23127917fd",
+      "correlation_id": "req-rollback01",
+      "prompt_name": "day13-chat",
+      "prompt_label": "production",
+      "prompt_version": 1,
+      "prompt_source": "langfuse",
+      "url": "https://jp.cloud.langfuse.com/project/cmso0kyzy000jad0i5gnv9daa/traces/f6442b6498fbde9010cebe23127917fd",
+      "note": "4. Rolled production back to v1, tested production -> back to v1"
+    }
+  ]
+}
