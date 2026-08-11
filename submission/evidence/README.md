@@ -7,6 +7,9 @@ sau khi merge đầy đủ phần A (Trà), B (Tuấn Anh) và C (Mai Anh) vào 
 | File | Nội dung |
 |---|---|
 | `dashboard-validator.txt` | Kết quả `validate_dashboard.py` (Mai Anh) |
+| `validate-logs-final.txt` | Kết quả cuối `validate_logs.py` (100/100, 10 correlation ID, 0 PII leak). |
+| `langfuse-traces-list.json` | 12 trace thật trên Langfuse (project `My Project`, host `jp.cloud.langfuse.com`) kèm correlation_id, prompt metadata và link từng trace. |
+| `pii-redaction-sample.jsonl` | 3 dòng log gốc có email/phone/credit card test đã redact thành `[REDACTED_*]`. |
 | `railway-deployment.txt` | Railway deployment SUCCESS, public health smoke test và correlation ID smoke test. |
 | `challenge-rag_slow-2026-08-11.txt` | Challenge chính thức, metric latency và correlation IDs sau khi điều tra `rag_slow`. |
 | `jaeger-otel-smoke.txt` | OTLP smoke trace trên Jaeger với `http.request`, Langfuse bridge, `rag.retrieve` và `llm.generate`. |
