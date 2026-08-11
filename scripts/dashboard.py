@@ -100,6 +100,7 @@ def summarise(records: list[dict], window_minutes: int) -> dict:
             "event": record.get("event", ""),
             "service": record.get("service", ""),
             "correlation_id": record.get("correlation_id", ""),
+            "raw": record,
         }
         lat = as_number(record, "latency_ms")
         if lat is not None:
@@ -201,6 +202,29 @@ def make_handler(log_path: Path, config_path: Path):
 
         def log_message(self, _: str, *args: object) -> None:
             return
+
+        def do_POST(self) -> None:  # noqa: N802
+            if self.path.startswith("/api/incidents/"):
+                import urllib.request
+                import urllib.error
+                target_url = "http://127.0.0.1:8000/incidents/" + self.path[len("/api/incidents/"):]
+                req = urllib.request.Request(target_url, method="POST")
+                try:
+                    with urllib.request.urlopen(req) as response:
+                        body = response.read()
+                        self.send_response(response.status)
+                        self.send_header("Access-Control-Allow-Origin", "*")
+                        self.end_headers()
+                        self.wfile.write(body)
+                except urllib.error.HTTPError as e:
+                    self.send_response(e.code)
+                    self.send_header("Access-Control-Allow-Origin", "*")
+                    self.end_headers()
+                    self.wfile.write(e.read())
+                except Exception as e:
+                    self.send_error(500, str(e))
+                return
+            self.send_error(404)
 
     return DashboardHandler
 

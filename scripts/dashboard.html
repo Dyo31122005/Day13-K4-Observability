@@ -263,6 +263,36 @@ tbody tr:last-child td{border-bottom:none}
 .hamburger svg{color:var(--text)}
 .overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:90}
 
+/* ───────── Modal & Toggles ───────── */
+.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:300;align-items:center;justify-content:center;padding:20px}
+.modal.active{display:flex}
+.modal-content{background:var(--surface);width:100%;max-width:600px;border-radius:var(--radius);padding:24px;box-shadow:var(--shadow-lg);position:relative;max-height:90vh;overflow-y:auto}
+.modal-close{position:absolute;top:20px;right:20px;background:none;border:none;cursor:pointer;color:var(--text-muted)}
+.modal-close:hover{color:var(--text)}
+.raw-json{background:#0f172a;color:#38bdf8;padding:16px;border-radius:8px;font-family:monospace;font-size:12px;white-space:pre-wrap;overflow-x:auto;margin-top:12px}
+
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border-light)}
+.toggle-row:last-child{border-bottom:none}
+.toggle-label{font-size:13px;font-weight:600}
+.switch{position:relative;display:inline-block;width:36px;height:20px}
+.switch input{opacity:0;width:0;height:0}
+.slider{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background-color:var(--border);transition:.4s;border-radius:20px}
+.slider:before{position:absolute;content:"";height:14px;width:14px;left:3px;bottom:3px;background-color:white;transition:.4s;border-radius:50%}
+input:checked + .slider{background-color:var(--danger)}
+input:checked + .slider:before{transform:translateX(16px)}
+
+tr.clickable{cursor:pointer;transition:var(--transition)}
+tr.clickable:hover{background:var(--primary-light)}
+
+/* ───────── Toast Notification ───────── */
+.toast-container{position:fixed;bottom:24px;right:24px;z-index:400;display:flex;flex-direction:column;gap:10px}
+.toast{background:var(--surface);border:1px solid var(--border);border-left:4px solid var(--primary);border-radius:var(--radius-xs);padding:14px 18px;box-shadow:var(--shadow-lg);display:flex;align-items:center;gap:12px;transform:translateX(120%);transition:transform .3s cubic-bezier(.4,0,.2,1);min-width:280px}
+.toast.show{transform:translateX(0)}
+.toast-icon{color:var(--primary)}
+.toast-content{flex:1}
+.toast-title{font-size:13.5px;font-weight:600;color:var(--text);margin-bottom:2px}
+.toast-desc{font-size:12px;color:var(--text-muted)}
+
 /* ───────── Responsive ───────── */
 @media(max-width:1100px){
   .stat-cards{grid-template-columns:repeat(2,1fr)}
@@ -306,6 +336,21 @@ tbody tr:last-child td{border-bottom:none}
   <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h14M3 10h14M3 14h14"/></svg>
 </button>
 <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
+
+<!-- Log Details Modal -->
+<div id="logModal" class="modal" onclick="if(event.target===this) closeLogModal()">
+  <div class="modal-content">
+    <button class="modal-close" onclick="closeLogModal()">
+      <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+    </button>
+    <h2 style="margin-bottom:8px">Log Details</h2>
+    <div id="modalEventBadge"></div>
+    <div class="raw-json" id="modalRawJson"></div>
+  </div>
+</div>
+
+<!-- Toast Container -->
+<div id="toast-container" class="toast-container"></div>
 
 <!-- ═══════ SIDEBAR ═══════ -->
 <aside class="sidebar" id="sidebar">
@@ -393,7 +438,7 @@ tbody tr:last-child td{border-bottom:none}
         <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 7a6 6 0 0111-3M13 7a6 6 0 01-11 3"/><path d="M1 2v5h5M13 12V7H8"/></svg>
         Refresh
       </button>
-      <button class="btn btn-primary">
+      <button class="btn btn-primary" onclick="exportCSV()">
         <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 2v10M2 7h10"/></svg>
         Export
       </button>
@@ -588,7 +633,11 @@ tbody tr:last-child td{border-bottom:none}
     <div class="panel">
       <div class="panel-header">
         <span class="panel-title">Recent Log Events</span>
-        <div class="panel-menu">⋯</div>
+        <select id="log-filter" onchange="renderTable()" style="padding:4px 8px;border:1px solid var(--border);border-radius:4px;font-size:12px;background:var(--surface-alt);color:var(--text);outline:none">
+          <option value="all">All Events</option>
+          <option value="request_failed">Errors Only</option>
+          <option value="warning">Warnings</option>
+        </select>
       </div>
       <div class="table-wrapper">
         <table>
@@ -607,17 +656,34 @@ tbody tr:last-child td{border-bottom:none}
         </table>
       </div>
     </div>
-    <!-- AI Assistant -->
+    <!-- Incident Controls -->
     <div class="panel">
-      <div class="ai-card">
-        <div class="ai-avatar">🤖</div>
-        <h3>AI Assistant</h3>
-        <div class="ai-input-row">
-          <input type="text" placeholder="Ask me anything..." aria-label="AI question">
-          <button aria-label="Send">
-            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 9l10-5-4 10-2-5-4-1z"/></svg>
-          </button>
-        </div>
+      <div class="panel-header">
+        <span class="panel-title">Incident Controls</span>
+        <span class="slo-badge bad" style="background:var(--danger-light)">Chaos</span>
+      </div>
+      <div style="font-size:12px;color:var(--text-muted);margin-bottom:16px">Trigger system incidents to test observability alerts and SLO breaches.</div>
+      
+      <div class="toggle-row">
+        <span class="toggle-label">Slow RAG (High Latency)</span>
+        <label class="switch">
+          <input type="checkbox" onchange="toggleIncident('rag_slow', this.checked)">
+          <span class="slider"></span>
+        </label>
+      </div>
+      <div class="toggle-row">
+        <span class="toggle-label">Tool Failure (500 Errors)</span>
+        <label class="switch">
+          <input type="checkbox" onchange="toggleIncident('tool_fail', this.checked)">
+          <span class="slider"></span>
+        </label>
+      </div>
+      <div class="toggle-row">
+        <span class="toggle-label">Cost Spike (GPT-4 fallback)</span>
+        <label class="switch">
+          <input type="checkbox" onchange="toggleIncident('cost_spike', this.checked)">
+          <span class="slider"></span>
+        </label>
       </div>
     </div>
   </div>
@@ -628,6 +694,71 @@ tbody tr:last-child td{border-bottom:none}
 /* ═══════════════════════════════════════════════════════
    DATA FETCHING & RENDERING
    ═══════════════════════════════════════════════════════ */
+
+let allLogData = [];
+let currentDashboardData = null;
+
+function exportCSV() {
+  if (!currentDashboardData) return alert("No data to export");
+  let csv = "Time,Event,Service,Latency_ms,Correlation_ID\n";
+  allLogData.forEach(log => {
+    csv += `"${log.ts}","${log.event}","${log.service || ''}","${log.latency_ms || ''}","${log.correlation_id || ''}"\n`;
+  });
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.setAttribute("href", url);
+  link.setAttribute("download", "observability_export.csv");
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
+function showLogModal(index) {
+  const log = allLogData[index];
+  if (!log) return;
+  document.getElementById('modalEventBadge').innerHTML = `<span class="event-badge ${eventBadgeClass(log.event)}">${log.event}</span>`;
+  document.getElementById('modalRawJson').textContent = JSON.stringify(log.raw, null, 2);
+  document.getElementById('logModal').classList.add('active');
+}
+
+function closeLogModal() {
+  document.getElementById('logModal').classList.remove('active');
+}
+
+async function toggleIncident(name, enable) {
+  const action = enable ? "enable" : "disable";
+  try {
+    await fetch(`/api/incidents/${name}/${action}`, { method: 'POST' });
+  } catch (e) {
+    console.error("Failed to toggle incident", e);
+  }
+}
+
+function renderTable() {
+  const tbody = document.getElementById('logs-tbody');
+  const filter = document.getElementById('log-filter').value;
+  
+  let filtered = allLogData;
+  if (filter === 'request_failed') filtered = allLogData.filter(l => l.event === 'request_failed');
+  if (filter === 'warning') filtered = allLogData.filter(l => l.event.includes('incident') || l.event === 'http_error');
+  
+  if (filtered && filtered.length > 0) {
+    tbody.innerHTML = filtered.map((log) => {
+      const origIndex = allLogData.indexOf(log);
+      return `
+      <tr class="clickable" onclick="showLogModal(${origIndex})">
+        <td>${formatTime(log.ts)}</td>
+        <td><span class="event-badge ${eventBadgeClass(log.event)}">${log.event}</span></td>
+        <td>${log.service || '—'}</td>
+        <td>${log.latency_ms != null ? log.latency_ms + ' ms' : '—'}</td>
+        <td class="correlation-id">${log.correlation_id || '—'}</td>
+      </tr>
+    `}).join('');
+  } else {
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:30px;color:var(--text-muted)">No log events match filter</td></tr>';
+  }
+}
 
 async function fetchData() {
   try {
@@ -926,26 +1057,93 @@ async function render() {
   updateSLOBadge(document.getElementById('quality-slo-badge'), qGood);
 
   // ═══ Recent Logs Table ═══
-  const tbody = document.getElementById('logs-tbody');
-  if (data.recent_logs && data.recent_logs.length > 0) {
-    tbody.innerHTML = data.recent_logs.map(log => `
-      <tr>
-        <td>${formatTime(log.ts)}</td>
-        <td><span class="event-badge ${eventBadgeClass(log.event)}">${log.event}</span></td>
-        <td>${log.service || '—'}</td>
-        <td>${log.latency_ms != null ? log.latency_ms + ' ms' : '—'}</td>
-        <td class="correlation-id">${log.correlation_id || '—'}</td>
-      </tr>
-    `).join('');
-  } else {
-    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:30px;color:var(--text-muted)">No log events in window</td></tr>';
-  }
+  currentDashboardData = data;
+  allLogData = data.recent_logs || [];
+  renderTable();
 }
 
 /* ═══ SIDEBAR TOGGLE (mobile) ═══ */
 function toggleSidebar() {
   document.getElementById('sidebar').classList.toggle('open');
   document.getElementById('overlay').classList.toggle('active');
+}
+
+/* ═══ TOAST NOTIFICATIONS & UI INTERACTIVITY ═══ */
+function showToast(title, desc) {
+  const container = document.getElementById('toast-container');
+  const toast = document.createElement('div');
+  toast.className = 'toast';
+  toast.innerHTML = `
+    <svg class="toast-icon" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+    <div class="toast-content">
+      <div class="toast-title">${title}</div>
+      <div class="toast-desc">${desc}</div>
+    </div>
+  `;
+  container.appendChild(toast);
+  // Animate in
+  requestAnimationFrame(() => toast.classList.add('show'));
+  // Remove after 3s
+  setTimeout(() => {
+    toast.classList.remove('show');
+    setTimeout(() => toast.remove(), 300);
+  }, 3000);
+}
+
+// Handle sidebar clicks
+document.querySelectorAll('.sidebar-nav .nav-item').forEach(item => {
+  item.addEventListener('click', e => {
+    e.preventDefault();
+    if (item.textContent.includes('Dashboard')) return;
+    
+    if (item.textContent.includes('Logs')) {
+      const tableHeader = document.querySelector('.table-wrapper').previousElementSibling;
+      tableHeader.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      tableHeader.style.transition = 'color 0.3s';
+      tableHeader.style.color = 'var(--primary)';
+      setTimeout(() => tableHeader.style.color = '', 1000);
+      if (window.innerWidth <= 768) toggleSidebar();
+      return;
+    }
+    
+    // Temporarily set active
+    document.querySelectorAll('.sidebar-nav .nav-item').forEach(n => n.classList.remove('active'));
+    item.classList.add('active');
+    
+    // Extract text ignoring badges
+    const clone = item.cloneNode(true);
+    const badges = clone.querySelectorAll('.badge, .icon');
+    badges.forEach(b => b.remove());
+    const name = clone.textContent.trim();
+    
+    showToast("Feature Not Ready", `The '${name}' page will be implemented in future labs.`);
+    
+    // Revert active state
+    setTimeout(() => {
+      item.classList.remove('active');
+      document.querySelector('.sidebar-nav .nav-item').classList.add('active');
+    }, 1500);
+  });
+});
+
+// Handle upgrade card button
+const upgradeBtn = document.querySelector('.upgrade-card button');
+if (upgradeBtn) {
+  upgradeBtn.addEventListener('click', e => {
+    e.preventDefault();
+    showToast("Report Generation", "This feature is currently disabled in the lab environment.");
+  });
+}
+
+// Handle search input
+const searchInput = document.querySelector('.sidebar-search input');
+if (searchInput) {
+  searchInput.addEventListener('keydown', e => {
+    if(e.key === 'Enter') {
+      showToast("Search Offline", "Global search is not indexed for this lab.");
+      e.target.value = '';
+    }
+  });
 }
 
 /* ═══ INIT ═══ */
