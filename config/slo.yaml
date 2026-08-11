@@ -4,13 +4,33 @@ slis:
   latency_p95_ms:
     objective: 3000
     target: 99.5
-    note: Replace with your group's target
+    note: >
+      Khớp threshold panel Latency trong config/dashboard.yaml.
+      Baseline đo được (load_test.py, concurrency=5, n=40): P95 ~150ms.
+      Incident practice rag_slow đẩy P95 lên ~2651ms (~17.6x baseline),
+      vẫn dưới 3000ms nên objective 3000ms còn biên an toàn hợp lý cho
+      user-facing latency trước khi vi phạm SLO.
   error_rate_pct:
     objective: 2
     target: 99.0
+    note: >
+      Khớp threshold panel Errors. Baseline đo được: 0% lỗi trên 40 request.
+      Incident practice tool_fail gây 100% lỗi (RuntimeError: Vector store
+      timeout) — cho thấy objective 2% đủ nhạy để bắt sự cố dạng downstream
+      dependency fail.
   daily_cost_usd:
     objective: 2.5
     target: 100.0
+    note: >
+      Khớp threshold panel Cost (tổng cost_usd trong cửa sổ dashboard 60 phút,
+      áp dụng lại cho ngân sách ngày). Baseline: avg $0.00215/request, tổng
+      $0.0858 cho 40 request. Incident practice cost_spike đẩy avg cost lên
+      $0.00788/request (~3.7x baseline) — ở traffic thực tế đủ để chạm
+      objective trong vài giờ nếu không phát hiện sớm.
   quality_score_avg:
     objective: 0.75
     target: 95.0
+    note: >
+      Khớp threshold panel Quality. Baseline đo được: mean 0.88 (min 0.80,
+      max 0.90) trên 40 request — còn biên an toàn ~0.13 trước khi chạm
+      objective 0.75.

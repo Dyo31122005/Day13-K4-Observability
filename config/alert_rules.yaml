@@ -1,19 +1,28 @@
 alerts:
-  - name: TODO_alert_1
-    severity: TODO
-    condition: TODO
+  - name: HighLatencyP95
+    severity: critical
+    condition: >
+      latency_p95_ms (rolling 5m, panel Latency trong config/dashboard.yaml)
+      > 3000 for 5m
     type: symptom-based
-    owner: TODO
+    owner: D - SRE & Alerts Engineer
     runbook: docs/alerts.md#alert-1
-  - name: TODO_alert_2
-    severity: TODO
-    condition: TODO
+
+  - name: ElevatedErrorRate
+    severity: critical
+    condition: >
+      error_rate_pct (rolling 5m, panel Errors trong config/dashboard.yaml)
+      > 2 for 5m
     type: symptom-based
-    owner: TODO
+    owner: D - SRE & Alerts Engineer
     runbook: docs/alerts.md#alert-2
-  - name: TODO_alert_3
-    severity: TODO
-    condition: TODO
+
+  - name: CostSpike
+    severity: warning
+    condition: >
+      avg_cost_usd_per_request (rolling 15m) > 2x avg_cost_usd_per_request
+      baseline (rolling 24h) for 15m, OR total_cost_usd (panel Cost, cửa sổ
+      60 phút) > 2.5
     type: symptom-based
-    owner: TODO
+    owner: D - SRE & Alerts Engineer
     runbook: docs/alerts.md#alert-3
