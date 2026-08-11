@@ -12,9 +12,13 @@ TRAFFIC: int = 0
 QUALITY_SCORES: list[float] = []
 
 
-def record_request(latency_ms: int, cost_usd: float, tokens_in: int, tokens_out: int, quality_score: float) -> None:
+def record_received() -> None:
+    """Record every request when it reaches the API, including failures."""
     global TRAFFIC
     TRAFFIC += 1
+
+
+def record_request(latency_ms: int, cost_usd: float, tokens_in: int, tokens_out: int, quality_score: float) -> None:
     REQUEST_LATENCIES.append(latency_ms)
     REQUEST_COSTS.append(cost_usd)
     REQUEST_TOKENS_IN.append(tokens_in)
@@ -38,8 +42,13 @@ def percentile(values: list[int], p: int) -> float:
 
 
 def snapshot() -> dict:
+    error_total = sum(ERRORS.values())
+    error_rate_pct = round((error_total / TRAFFIC) * 100, 2) if TRAFFIC else 0.0
+
     return {
         "traffic": TRAFFIC,
+        "error_total": error_total,
+        "error_rate_pct": error_rate_pct,
         "latency_p50": percentile(REQUEST_LATENCIES, 50),
         "latency_p95": percentile(REQUEST_LATENCIES, 95),
         "latency_p99": percentile(REQUEST_LATENCIES, 99),

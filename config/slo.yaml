@@ -4,13 +4,16 @@ slis:
   latency_p95_ms:
     objective: 3000
     target: 99.5
-    note: Replace with your group's target
+    note: P95 response latency must remain at or below 3000 ms during the 28-day window.
   error_rate_pct:
     objective: 2
     target: 99.0
+    note: Failed requests must not exceed 2% of all received requests.
   daily_cost_usd:
     objective: 2.5
     target: 100.0
+    note: Daily LLM cost must remain at or below USD 2.50.
   quality_score_avg:
     objective: 0.75
     target: 95.0
+    note: Mean quality proxy must remain at or above 0.75.
