@@ -9,6 +9,7 @@ from .mock_rag import retrieve
 from .pii import hash_user_id, summarize_text
 from .prompt_management import resolve_prompt
 from .tracing import get_langfuse_client, observe, tracing_enabled
+from structlog.contextvars import get_contextvars
 
 
 @dataclass
@@ -31,6 +32,12 @@ class LabAgent:
         started = time.perf_counter()
         docs = retrieve(message)
         langfuse_client = get_langfuse_client()
+        langfuse_client.update_current_trace(
+            user_id=hash_user_id(user_id),
+            session_id=session_id,
+            tags=["lab", feature, self.model],
+            metadata={"correlation_id": get_contextvars().get("correlation_id", "MISSING")},
+        )
         prompt = resolve_prompt(
             langfuse_client,
             feature=feature,
