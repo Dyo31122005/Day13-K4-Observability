@@ -9,7 +9,7 @@ from structlog.contextvars import bind_contextvars
 from .agent import LabAgent
 from .incidents import disable, enable, status
 from .logging_config import configure_logging, get_logger
-from .metrics import record_error, snapshot
+from .metrics import record_error, record_received, snapshot
 from .middleware import CorrelationIdMiddleware
 from .pii import hash_user_id, summarize_text
 from .schemas import ChatRequest, ChatResponse
@@ -109,6 +109,7 @@ async def chat(request: Request, body: ChatRequest) -> ChatResponse:
         service="api",
         payload={"message_preview": summarize_text(body.message)},
     )
+    record_received()
     try:
         result = agent.run(
             user_id=body.user_id,

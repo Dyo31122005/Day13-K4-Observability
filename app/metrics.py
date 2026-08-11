@@ -12,9 +12,13 @@ TRAFFIC: int = 0
 QUALITY_SCORES: list[float] = []
 
 
-def record_request(latency_ms: int, cost_usd: float, tokens_in: int, tokens_out: int, quality_score: float) -> None:
+def record_received() -> None:
+    """Record every request when it reaches the API, including failures."""
     global TRAFFIC
     TRAFFIC += 1
+
+
+def record_request(latency_ms: int, cost_usd: float, tokens_in: int, tokens_out: int, quality_score: float) -> None:
     REQUEST_LATENCIES.append(latency_ms)
     REQUEST_COSTS.append(cost_usd)
     REQUEST_TOKENS_IN.append(tokens_in)
@@ -38,12 +42,13 @@ def percentile(values: list[int], p: int) -> float:
 
 
 def snapshot() -> dict:
-    total_errors = sum(ERRORS.values())
-    total_requests = TRAFFIC + total_errors
-    error_rate = (total_errors / total_requests * 100) if total_requests > 0 else 0.0
+    error_total = sum(ERRORS.values())
+    error_rate_pct = round((error_total / TRAFFIC) * 100, 2) if TRAFFIC else 0.0
 
     return {
         "traffic": TRAFFIC,
+        "error_total": error_total,
+        "error_rate_pct": error_rate_pct,
         "latency_p50": percentile(REQUEST_LATENCIES, 50),
         "latency_p95": percentile(REQUEST_LATENCIES, 95),
         "latency_p99": percentile(REQUEST_LATENCIES, 99),
@@ -51,7 +56,6 @@ def snapshot() -> dict:
         "total_cost_usd": round(sum(REQUEST_COSTS), 4),
         "tokens_in_total": sum(REQUEST_TOKENS_IN),
         "tokens_out_total": sum(REQUEST_TOKENS_OUT),
-        "error_rate_pct": round(error_rate, 2),  # ← Thêm trường này
         "error_breakdown": dict(ERRORS),
         "quality_avg": round(mean(QUALITY_SCORES), 4) if QUALITY_SCORES else 0.0,
     }
